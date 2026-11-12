@@ -12,6 +12,8 @@ const TZ = 'Europe/Istanbul';
 async function main() {
   if (process.env.NODE_ENV === 'production') throw new Error('Refusing to seed production');
   await prisma.user.deleteMany({ where: { email: 'demo@beauty-crm.test' } });
+  // appointments first: appointment_services -> services is ON DELETE RESTRICT (history protection)
+  await prisma.appointment.deleteMany({ where: { business: { slug: 'lavanda-studio' } } });
   await prisma.business.deleteMany({ where: { slug: 'lavanda-studio' } });
 
   const user = await prisma.user.create({ data: { email: 'demo@beauty-crm.test', passwordHash: await bcrypt.hash('Demo12345!', 10), fullName: 'Анна Смирнова', phone: '+90 500 000 00 00' } });
