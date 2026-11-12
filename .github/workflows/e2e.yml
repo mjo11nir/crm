@@ -32,7 +32,6 @@ jobs:
       - name: Booking web
         run: |
           cd apps/booking-web && NEXT_TELEMETRY_DISABLED=1 pnpm build
-          cp -r .next/static .next/standalone/apps/booking-web/.next/
-          PORT=3001 nohup node .next/standalone/apps/booking-web/server.js > web.log 2>&1 &
+          PORT=3001 nohup pnpm start > web.log 2>&1 &
       - run: npx wait-on -t 60000 http://localhost:3000/api/v1/health http://localhost:3001
       - run: cd tests && pnpm e2e

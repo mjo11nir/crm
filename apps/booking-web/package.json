@@ -5,9 +5,10 @@
   "scripts": {
     "dev": "next dev -p 3001",
     "build": "next build",
-    "start": "next start -p 3001",
+    "start": "node .next/standalone/apps/booking-web/server.js",
     "typecheck": "tsc --noEmit",
-    "test": "node --test --experimental-strip-types lib/*.test.ts"
+    "test": "node --test --experimental-strip-types lib/*.test.ts",
+    "postbuild": "node scripts/copy-static.mjs"
   },
   "dependencies": {
     "next": "15.5.29",
