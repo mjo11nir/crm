@@ -13,7 +13,8 @@
     "test:integration": "jest --runInBand test/integration",
     "prisma:generate": "prisma generate",
     "prisma:deploy": "prisma migrate deploy",
-    "seed": "ts-node --transpile-only src/seed.ts"
+    "seed": "ts-node --transpile-only src/seed.ts",
+    "openapi": "ts-node --transpile-only src/openapi.ts"
   },
   "dependencies": {
     "@nestjs/common": "^11.2.9",
