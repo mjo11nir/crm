@@ -1,0 +1,17 @@
+include: package:flutter_lints/flutter.yaml
+
+analyzer:
+  exclude:
+    - build/**
+    - android/**
+    - ios/**
+    - web/**
+    - lib/l10n/app_localizations*.dart
+
+linter:
+  rules:
+    - prefer_const_constructors
+    - always_declare_return_types
+
+formatter:
+  page_width: 160

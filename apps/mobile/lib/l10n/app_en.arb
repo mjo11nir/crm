@@ -1,0 +1,239 @@
+{
+  "@@locale": "en",
+  "appTitle": "Beauty CRM",
+  "tabHome": "Home",
+  "tabSchedule": "Schedule",
+  "tabChats": "Chats",
+  "tabMore": "More",
+  "createAppointment": "Create appointment",
+  "clients": "Clients",
+  "totalInBase": "Total in database",
+  "finance": "Finance",
+  "dayRevenue": "Revenue for the day",
+  "freeSlots": "Free slots",
+  "notifications": "Notifications",
+  "help": "Help",
+  "day": "Day",
+  "week": "Week",
+  "feed": "Feed",
+  "today": "Today",
+  "createOrBreak": "create appointment or break",
+  "noAppointments": "No appointments",
+  "dayOff": "Day off",
+  "share": "Share",
+  "findAndBook": "Find and book",
+  "freeSlotsHint": "Specify when you have free time for appointments. Choose the period you need. Intervals take online booking rules into account and do not depend on service duration.",
+  "period": "Period",
+  "view": "View",
+  "viewImage": "Image (social)",
+  "viewText": "Text",
+  "colorTheme": "Color theme",
+  "freeSlotsByDay": "FREE SLOTS BY DAY",
+  "freeTimeForBooking": "Free time for booking:",
+  "bookNow": "Book now!",
+  "send": "Send",
+  "close": "Close",
+  "profile": "Profile",
+  "settings": "Settings",
+  "scheduleAndPlace": "Schedule and workplace",
+  "onlineBooking": "Online booking",
+  "waitlist": "Waitlist",
+  "on": "On",
+  "off": "Off",
+  "servicesAndProducts": "Services and products",
+  "webPage": "Web page",
+  "clientNotifications": "Client notifications",
+  "alerts": "Alerts",
+  "calendarSync": "Calendar sync",
+  "appearance": "Appearance",
+  "languageRegion": "Language and region",
+  "subscription": "Subscription",
+  "logout": "Log out",
+  "logoutAll": "Log out on all devices",
+  "deleteAccount": "Delete account",
+  "deleteAccountWarning": "All your business data will be permanently deleted. Enter your password to confirm.",
+  "login": "Log in",
+  "register": "Create account",
+  "email": "Email",
+  "password": "Password",
+  "fullName": "Full name",
+  "businessName": "Business name",
+  "phone": "Phone",
+  "noAccount": "No account? Create one",
+  "haveAccount": "Already have an account? Log in",
+  "retry": "Retry",
+  "errorTitle": "Something went wrong",
+  "save": "Save",
+  "cancel": "Cancel",
+  "search": "Search",
+  "client": "Client",
+  "noClient": "Without client",
+  "services": "Services",
+  "selectServices": "Select services",
+  "date": "Date",
+  "time": "Time",
+  "notes": "Notes",
+  "discountPercent": "Discount, %",
+  "duration": "Duration",
+  "noFreeTime": "No free time on this day",
+  "statusBOOKED": "Booked",
+  "statusCONFIRMED": "Confirmed",
+  "statusCOMPLETED": "Completed",
+  "statusCANCELLED": "Cancelled",
+  "statusNO_SHOW": "No-show",
+  "markCompleted": "Mark completed",
+  "markNoShow": "Client didn't come",
+  "cancelAppointment": "Cancel appointment",
+  "confirmAppointment": "Confirm",
+  "reschedule": "Reschedule",
+  "recordPayment": "Record payment",
+  "deposit": "Deposit",
+  "payment": "Payment",
+  "refund": "Refund",
+  "cash": "Cash",
+  "card": "Card",
+  "transfer": "Transfer",
+  "balance": "Balance due",
+  "amount": "Amount",
+  "newClient": "New client",
+  "archive": "Archive",
+  "visits": "Visits",
+  "totalSpent": "Total spent",
+  "lastVisit": "Last visit",
+  "nextAppointment": "Next appointment",
+  "history": "History",
+  "newService": "New service",
+  "name": "Name",
+  "price": "Price",
+  "bufferMinutes": "Buffer after, min",
+  "onlineBookable": "Available for online booking",
+  "active": "Active",
+  "offlineData": "Offline — showing saved data",
+  "chatsEmpty": "No conversations yet",
+  "typeMessage": "Message",
+  "newChat": "New conversation",
+  "support": "Support",
+  "internalChat": "Team",
+  "externalChannelsBlocked": "WhatsApp and Instagram inboxes require an approved Meta Business integration and are not connected.",
+  "workingHours": "Working hours",
+  "locations": "Locations",
+  "addLocation": "Add location",
+  "address": "Address",
+  "weekdayOff": "Day off",
+  "bookingLink": "Booking link",
+  "minNotice": "Minimum notice, min",
+  "maxHorizon": "Booking horizon, days",
+  "slotStep": "Slot step, min",
+  "requireApproval": "Confirm bookings manually",
+  "themeSystem": "System",
+  "themeLight": "Light",
+  "themeDark": "Dark",
+  "language": "Language",
+  "systemLanguage": "System language",
+  "notConnected": "Not connected — requires provider credentials",
+  "sandboxDelivery": "Messages are queued and delivered via the sandbox adapter (no real messages are sent).",
+  "storeBillingBlocked": "In-app purchases require App Store / Google Play configuration.",
+  "expired": "Expired",
+  "nothingHere": "Nothing here yet",
+  "slotTaken": "This time is already taken",
+  "versionConflict": "The appointment was changed on another device. Reload and try again.",
+  "subscriptionRequired": "Your plan does not include this feature",
+  "required": "Required",
+  "invalidEmail": "Invalid email",
+  "passwordTooShort": "At least 8 characters",
+  "copied": "Copied",
+  "statistics": "Statistics",
+  "earned": "Earned",
+  "planned": "Planned",
+  "expenses": "Expenses",
+  "profit": "Profit (estimate)",
+  "noShowRate": "No-show rate",
+  "averageTicket": "Average ticket",
+  "appointmentsCount": "Appointments",
+  "topServices": "Top services",
+  "revenueValue": "Revenue: {amount}",
+  "@revenueValue": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "todayWithDate": "Today {date}",
+  "@todayWithDate": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "freeMinutes": "free: {minutes} min",
+  "@freeMinutes": {
+    "placeholders": {
+      "minutes": {
+        "type": "int"
+      }
+    }
+  },
+  "minutesShort": "{minutes} min",
+  "@minutesShort": {
+    "placeholders": {
+      "minutes": {
+        "type": "int"
+      }
+    }
+  },
+  "trialDaysLeft": "Trial: {days} days left",
+  "@trialDaysLeft": {
+    "placeholders": {
+      "days": {
+        "type": "int"
+      }
+    }
+  },
+  "newInMonth": "{month, select, 1{in January} 2{in February} 3{in March} 4{in April} 5{in May} 6{in June} 7{in July} 8{in August} 9{in September} 10{in October} 11{in November} 12{in December} other{this month}}",
+  "@newInMonth": {
+    "placeholders": {
+      "month": {
+        "type": "String"
+      }
+    }
+  },
+  "clientsCount": "{count} clients",
+  "@clientsCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "conflictsSkipped": "{count} dates skipped: time taken",
+  "@conflictsSkipped": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "breakLabel": "Break",
+  "expiresAt": "Valid until",
+  "birthday": "Birthday",
+  "tags": "Tags (comma separated)",
+  "marketingConsent": "Agrees to receive promotions",
+  "outsideWorkingHours": "Allow outside working hours",
+  "repeat": "Repeat",
+  "auto": "Auto",
+  "currency": "Currency",
+  "timezone": "Timezone",
+  "plan": "Plan",
+  "status": "Status",
+  "features": "Features",
+  "everyNWeeks": "every {weeks} wk",
+  "@everyNWeeks": {
+    "placeholders": {
+      "weeks": {
+        "type": "int"
+      }
+    }
+  }
+}
