@@ -65,7 +65,11 @@ void main() {
     await tester.pumpAndSettle();
     await tester.tap(find.text('16:00'));
     await tester.pumpAndSettle();
-    await tester.scrollUntilVisible(find.text('Сохранить'), 300, scrollable: find.descendant(of: find.byType(AppointmentFormScreen), matching: find.byType(Scrollable)).first);
+    await tester.scrollUntilVisible(
+      find.text('Сохранить'),
+      300,
+      scrollable: find.descendant(of: find.byType(AppointmentFormScreen), matching: find.byType(Scrollable)).first,
+    );
     await tester.pumpAndSettle();
     await tester.tap(find.text('Сохранить'));
     await tester.pumpAndSettle();
