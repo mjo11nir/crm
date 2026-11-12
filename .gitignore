@@ -1,0 +1,16 @@
+node_modules/
+dist/
+.next/
+coverage/
+*.log
+.env
+.env.*
+!.env.example
+.DS_Store
+# flutter
+apps/mobile/.dart_tool/
+apps/mobile/build/
+apps/mobile/.flutter-plugins*
+apps/mobile/.packages
+apps/mobile/**/ephemeral/
+apps/mobile/test/**/failures/

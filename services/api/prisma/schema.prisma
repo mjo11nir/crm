@@ -1,0 +1,532 @@
+// Beauty CRM — PostgreSQL schema.
+// Conventions:
+//  * UUID primary keys
+//  * every tenant-owned row carries `businessId`
+//  * timestamps are stored in UTC (timestamptz); local scheduling uses Business.timezone (IANA)
+//  * money is stored as integer minor units (e.g. cents) + ISO-4217 currency
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum MemberRole {
+  OWNER
+  ADMIN
+  EMPLOYEE
+}
+
+enum AppointmentStatus {
+  BOOKED
+  CONFIRMED
+  COMPLETED
+  CANCELLED
+  NO_SHOW
+}
+
+enum AppointmentSource {
+  STAFF
+  ONLINE
+}
+
+enum PaymentKind {
+  DEPOSIT
+  PAYMENT
+  REFUND
+}
+
+enum PaymentMethod {
+  CASH
+  CARD
+  TRANSFER
+  ONLINE
+}
+
+enum PaymentStatus {
+  PENDING
+  SUCCEEDED
+  FAILED
+}
+
+enum SubscriptionTier {
+  TRIAL
+  PREMIUM
+  VIP
+}
+
+enum SubscriptionStatus {
+  ACTIVE
+  GRACE
+  EXPIRED
+  CANCELLED
+}
+
+enum WaitlistStatus {
+  WAITING
+  OFFERED
+  BOOKED
+  REMOVED
+}
+
+enum NotificationChannel {
+  PUSH
+  EMAIL
+  SMS
+  WHATSAPP
+}
+
+enum NotificationStatus {
+  QUEUED
+  SENT
+  FAILED
+}
+
+model User {
+  id           String   @id @default(uuid()) @db.Uuid
+  email        String   @unique
+  passwordHash String
+  fullName     String
+  phone        String?
+  avatarUrl    String?
+  locale       String   @default("ru")
+  createdAt    DateTime @default(now()) @db.Timestamptz(3)
+  updatedAt    DateTime @updatedAt @db.Timestamptz(3)
+  deletedAt    DateTime? @db.Timestamptz(3)
+
+  memberships   BusinessMember[]
+  refreshTokens RefreshToken[]
+
+  @@map("users")
+}
+
+model RefreshToken {
+  id         String    @id @default(uuid()) @db.Uuid
+  userId     String    @db.Uuid
+  tokenHash  String    @unique
+  familyId   String    @db.Uuid
+  expiresAt  DateTime  @db.Timestamptz(3)
+  revokedAt  DateTime? @db.Timestamptz(3)
+  replacedBy String?   @db.Uuid
+  userAgent  String?
+  createdAt  DateTime  @default(now()) @db.Timestamptz(3)
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([familyId])
+  @@map("refresh_tokens")
+}
+
+model Business {
+  id          String   @id @default(uuid()) @db.Uuid
+  name        String
+  slug        String   @unique
+  timezone    String   @default("Europe/Istanbul")
+  currency    String   @default("EUR") @db.Char(3)
+  phone       String?
+  description String?
+  avatarUrl   String?
+  themeColor  String   @default("#9137E8")
+  createdAt   DateTime @default(now()) @db.Timestamptz(3)
+  updatedAt   DateTime @updatedAt @db.Timestamptz(3)
+
+  // online booking rules
+  onlineBookingEnabled   Boolean @default(true)
+  minNoticeMinutes       Int     @default(60)
+  maxHorizonDays         Int     @default(60)
+  slotStepMinutes        Int     @default(15)
+  cancellationDeadlineMin Int    @default(1440)
+  requireApproval        Boolean @default(false)
+  waitlistEnabled        Boolean @default(true)
+
+  members      BusinessMember[]
+  locations    WorkLocation[]
+  employees    Employee[]
+  categories   ServiceCategory[]
+  services     Service[]
+  clients      Client[]
+  appointments Appointment[]
+  payments     Payment[]
+  expenses     Expense[]
+  waitlist     WaitlistEntry[]
+  conversations Conversation[]
+  subscription Subscription?
+  auditLogs    AuditLog[]
+  notifications NotificationJob[]
+  idempotencyKeys IdempotencyKey[]
+  scheduleExceptions ScheduleException[]
+  workSchedules WorkSchedule[]
+
+  @@map("businesses")
+}
+
+model BusinessMember {
+  id         String     @id @default(uuid()) @db.Uuid
+  businessId String     @db.Uuid
+  userId     String     @db.Uuid
+  role       MemberRole
+  createdAt  DateTime   @default(now()) @db.Timestamptz(3)
+
+  business Business @relation(fields: [businessId], references: [id], onDelete: Cascade)
+  user     User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  employee Employee?
+
+  @@unique([businessId, userId])
+  @@map("business_members")
+}
+
+model WorkLocation {
+  id         String   @id @default(uuid()) @db.Uuid
+  businessId String   @db.Uuid
+  name       String
+  address    String?
+  isActive   Boolean  @default(true)
+  createdAt  DateTime @default(now()) @db.Timestamptz(3)
+
+  business     Business      @relation(fields: [businessId], references: [id], onDelete: Cascade)
+  schedules    WorkSchedule[]
+  appointments Appointment[]
+
+  @@index([businessId])
+  @@map("work_locations")
+}
+
+model Employee {
+  id         String   @id @default(uuid()) @db.Uuid
+  businessId String   @db.Uuid
+  memberId   String?  @unique @db.Uuid
+  displayName String
+  isActive   Boolean  @default(true)
+  createdAt  DateTime @default(now()) @db.Timestamptz(3)
+
+  business     Business        @relation(fields: [businessId], references: [id], onDelete: Cascade)
+  member       BusinessMember? @relation(fields: [memberId], references: [id], onDelete: SetNull)
+  schedules    WorkSchedule[]
+  exceptions   ScheduleException[]
+  appointments Appointment[]
+
+  @@index([businessId])
+  @@map("employees")
+}
+
+/// Weekly recurring working hours. weekday: 1=Mon … 7=Sun (ISO). Minutes from local midnight.
+/// endMinute may exceed 1440 for overnight shifts.
+model WorkSchedule {
+  id          String  @id @default(uuid()) @db.Uuid
+  businessId  String  @db.Uuid
+  employeeId  String  @db.Uuid
+  locationId  String  @db.Uuid
+  weekday     Int     @db.SmallInt
+  startMinute Int
+  endMinute   Int
+  breakStartMinute Int?
+  breakEndMinute   Int?
+
+  business Business     @relation(fields: [businessId], references: [id], onDelete: Cascade)
+  employee Employee     @relation(fields: [employeeId], references: [id], onDelete: Cascade)
+  location WorkLocation @relation(fields: [locationId], references: [id], onDelete: Cascade)
+
+  @@index([businessId, employeeId])
+  @@map("work_schedules")
+}
+
+/// A one-day override: day off (isClosed) or custom hours for that local date.
+model ScheduleException {
+  id          String   @id @default(uuid()) @db.Uuid
+  businessId  String   @db.Uuid
+  employeeId  String   @db.Uuid
+  date        DateTime @db.Date
+  isClosed    Boolean  @default(true)
+  startMinute Int?
+  endMinute   Int?
+  note        String?
+
+  business Business @relation(fields: [businessId], references: [id], onDelete: Cascade)
+  employee Employee @relation(fields: [employeeId], references: [id], onDelete: Cascade)
+
+  @@unique([employeeId, date])
+  @@map("schedule_exceptions")
+}
+
+model ServiceCategory {
+  id         String @id @default(uuid()) @db.Uuid
+  businessId String @db.Uuid
+  name       String
+  sortOrder  Int    @default(0)
+
+  business Business  @relation(fields: [businessId], references: [id], onDelete: Cascade)
+  services Service[]
+
+  @@index([businessId])
+  @@map("service_categories")
+}
+
+model Service {
+  id              String   @id @default(uuid()) @db.Uuid
+  businessId      String   @db.Uuid
+  categoryId      String?  @db.Uuid
+  name            String
+  description     String?
+  durationMinutes Int
+  bufferMinutes   Int      @default(0)
+  priceMinor      Int
+  depositMinor    Int      @default(0)
+  onlineBookable  Boolean  @default(true)
+  isActive        Boolean  @default(true)
+  createdAt       DateTime @default(now()) @db.Timestamptz(3)
+  updatedAt       DateTime @updatedAt @db.Timestamptz(3)
+
+  business Business         @relation(fields: [businessId], references: [id], onDelete: Cascade)
+  category ServiceCategory? @relation(fields: [categoryId], references: [id], onDelete: SetNull)
+  appointmentServices AppointmentService[]
+  waitlist WaitlistEntry[]
+
+  @@index([businessId])
+  @@map("services")
+}
+
+model Client {
+  id                String    @id @default(uuid()) @db.Uuid
+  businessId        String    @db.Uuid
+  fullName          String
+  phone             String?
+  phoneNormalized   String?
+  email             String?
+  birthday          DateTime? @db.Date
+  notes             String?
+  tags              String[]  @default([])
+  discountPercent   Int       @default(0)
+  marketingConsent  Boolean   @default(false)
+  archivedAt        DateTime? @db.Timestamptz(3)
+  createdAt         DateTime  @default(now()) @db.Timestamptz(3)
+  updatedAt         DateTime  @updatedAt @db.Timestamptz(3)
+
+  business     Business      @relation(fields: [businessId], references: [id], onDelete: Cascade)
+  appointments Appointment[]
+  payments     Payment[]
+  waitlist     WaitlistEntry[]
+
+  @@index([businessId, fullName])
+  @@index([businessId, phoneNormalized])
+  @@map("clients")
+}
+
+model Appointment {
+  id            String            @id @default(uuid()) @db.Uuid
+  businessId    String            @db.Uuid
+  clientId      String?           @db.Uuid
+  employeeId    String            @db.Uuid
+  locationId    String            @db.Uuid
+  startsAt      DateTime          @db.Timestamptz(3)
+  endsAt        DateTime          @db.Timestamptz(3)
+  status        AppointmentStatus @default(BOOKED)
+  source        AppointmentSource @default(STAFF)
+  priceMinor    Int
+  discountMinor Int               @default(0)
+  notes         String?
+  /// Optimistic concurrency token for offline edits.
+  version       Int               @default(1)
+  createdAt     DateTime          @default(now()) @db.Timestamptz(3)
+  updatedAt     DateTime          @updatedAt @db.Timestamptz(3)
+
+  business Business     @relation(fields: [businessId], references: [id], onDelete: Cascade)
+  client   Client?      @relation(fields: [clientId], references: [id], onDelete: SetNull)
+  employee Employee     @relation(fields: [employeeId], references: [id], onDelete: Restrict)
+  location WorkLocation @relation(fields: [locationId], references: [id], onDelete: Restrict)
+  services AppointmentService[]
+  history  AppointmentStatusHistory[]
+  payments Payment[]
+
+  @@index([businessId, startsAt])
+  @@index([employeeId, startsAt])
+  @@map("appointments")
+}
+
+model AppointmentService {
+  id              String @id @default(uuid()) @db.Uuid
+  appointmentId   String @db.Uuid
+  serviceId       String @db.Uuid
+  nameSnapshot    String
+  durationMinutes Int
+  priceMinor      Int
+
+  appointment Appointment @relation(fields: [appointmentId], references: [id], onDelete: Cascade)
+  service     Service     @relation(fields: [serviceId], references: [id], onDelete: Restrict)
+
+  @@index([appointmentId])
+  @@map("appointment_services")
+}
+
+model AppointmentStatusHistory {
+  id            String            @id @default(uuid()) @db.Uuid
+  appointmentId String            @db.Uuid
+  fromStatus    AppointmentStatus?
+  toStatus      AppointmentStatus
+  changedBy     String?           @db.Uuid
+  createdAt     DateTime          @default(now()) @db.Timestamptz(3)
+
+  appointment Appointment @relation(fields: [appointmentId], references: [id], onDelete: Cascade)
+
+  @@index([appointmentId])
+  @@map("appointment_status_history")
+}
+
+model Payment {
+  id            String        @id @default(uuid()) @db.Uuid
+  businessId    String        @db.Uuid
+  appointmentId String?       @db.Uuid
+  clientId      String?       @db.Uuid
+  kind          PaymentKind
+  method        PaymentMethod
+  status        PaymentStatus @default(SUCCEEDED)
+  amountMinor   Int
+  currency      String        @db.Char(3)
+  providerRef   String?       @unique
+  paidAt        DateTime      @default(now()) @db.Timestamptz(3)
+  createdAt     DateTime      @default(now()) @db.Timestamptz(3)
+
+  business    Business     @relation(fields: [businessId], references: [id], onDelete: Cascade)
+  appointment Appointment? @relation(fields: [appointmentId], references: [id], onDelete: SetNull)
+  client      Client?      @relation(fields: [clientId], references: [id], onDelete: SetNull)
+
+  @@index([businessId, paidAt])
+  @@map("payments")
+}
+
+model Expense {
+  id          String   @id @default(uuid()) @db.Uuid
+  businessId  String   @db.Uuid
+  category    String
+  amountMinor Int
+  currency    String   @db.Char(3)
+  note        String?
+  spentAt     DateTime @db.Timestamptz(3)
+  createdAt   DateTime @default(now()) @db.Timestamptz(3)
+
+  business Business @relation(fields: [businessId], references: [id], onDelete: Cascade)
+
+  @@index([businessId, spentAt])
+  @@map("expenses")
+}
+
+model WaitlistEntry {
+  id             String         @id @default(uuid()) @db.Uuid
+  businessId     String         @db.Uuid
+  clientId       String         @db.Uuid
+  serviceId      String         @db.Uuid
+  preferredFrom  DateTime       @db.Date
+  preferredTo    DateTime       @db.Date
+  fromMinute     Int            @default(0)
+  toMinute       Int            @default(1440)
+  priority       Int            @default(0)
+  status         WaitlistStatus @default(WAITING)
+  createdAt      DateTime       @default(now()) @db.Timestamptz(3)
+
+  business Business @relation(fields: [businessId], references: [id], onDelete: Cascade)
+  client   Client   @relation(fields: [clientId], references: [id], onDelete: Cascade)
+  service  Service  @relation(fields: [serviceId], references: [id], onDelete: Cascade)
+
+  @@index([businessId, status])
+  @@map("waitlist_entries")
+}
+
+model Conversation {
+  id         String   @id @default(uuid()) @db.Uuid
+  businessId String   @db.Uuid
+  kind       String   @default("INTERNAL") // INTERNAL | SUPPORT
+  title      String
+  createdAt  DateTime @default(now()) @db.Timestamptz(3)
+  updatedAt  DateTime @updatedAt @db.Timestamptz(3)
+
+  business Business  @relation(fields: [businessId], references: [id], onDelete: Cascade)
+  messages Message[]
+
+  @@index([businessId])
+  @@map("conversations")
+}
+
+model Message {
+  id             String    @id @default(uuid()) @db.Uuid
+  conversationId String    @db.Uuid
+  senderUserId   String?   @db.Uuid
+  body           String
+  readAt         DateTime? @db.Timestamptz(3)
+  createdAt      DateTime  @default(now()) @db.Timestamptz(3)
+
+  conversation Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+
+  @@index([conversationId, createdAt])
+  @@map("messages")
+}
+
+model Subscription {
+  id         String             @id @default(uuid()) @db.Uuid
+  businessId String             @unique @db.Uuid
+  tier       SubscriptionTier
+  status     SubscriptionStatus
+  startedAt  DateTime           @default(now()) @db.Timestamptz(3)
+  expiresAt  DateTime           @db.Timestamptz(3)
+  store      String? // APP_STORE | GOOGLE_PLAY | MANUAL
+  storeRef   String?
+
+  business Business @relation(fields: [businessId], references: [id], onDelete: Cascade)
+
+  @@map("subscriptions")
+}
+
+model NotificationJob {
+  id             String              @id @default(uuid()) @db.Uuid
+  businessId     String              @db.Uuid
+  channel        NotificationChannel
+  recipient      String
+  template       String
+  payload        Json
+  status         NotificationStatus  @default(QUEUED)
+  dedupeKey      String              @unique
+  attempts       Int                 @default(0)
+  lastError      String?
+  scheduledFor   DateTime            @db.Timestamptz(3)
+  sentAt         DateTime?           @db.Timestamptz(3)
+  createdAt      DateTime            @default(now()) @db.Timestamptz(3)
+
+  business Business @relation(fields: [businessId], references: [id], onDelete: Cascade)
+
+  @@index([status, scheduledFor])
+  @@map("notification_jobs")
+}
+
+model IdempotencyKey {
+  id           String   @id @default(uuid()) @db.Uuid
+  businessId   String   @db.Uuid
+  key          String
+  scope        String
+  requestHash  String
+  responseBody Json?
+  statusCode   Int?
+  createdAt    DateTime @default(now()) @db.Timestamptz(3)
+
+  business Business @relation(fields: [businessId], references: [id], onDelete: Cascade)
+
+  @@unique([businessId, scope, key])
+  @@map("idempotency_keys")
+}
+
+model AuditLog {
+  id         String   @id @default(uuid()) @db.Uuid
+  businessId String   @db.Uuid
+  userId     String?  @db.Uuid
+  action     String
+  entity     String
+  entityId   String?
+  data       Json?
+  createdAt  DateTime @default(now()) @db.Timestamptz(3)
+
+  business Business @relation(fields: [businessId], references: [id], onDelete: Cascade)
+
+  @@index([businessId, createdAt])
+  @@map("audit_logs")
+}

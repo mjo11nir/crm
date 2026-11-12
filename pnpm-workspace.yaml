@@ -1,0 +1,8 @@
+packages:
+  - services/*
+  - apps/booking-web
+  - packages/*
+onlyBuiltDependencies:
+  - "@prisma/client"
+  - "@prisma/engines"
+  - prisma
